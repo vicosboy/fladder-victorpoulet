@@ -16,7 +16,7 @@ final windowTitleProvider = StateNotifierProvider<WindowTitleNotifier, String>((
 
 class WindowTitleNotifier extends StateNotifier<String> {
   final Ref ref;
-  WindowTitleNotifier(this.ref) : super('Cinéma') {
+  WindowTitleNotifier(this.ref) : super('NAS') {
     // Listen to player state changes to handle minimized <-> maximized transitions
     ref.listen(
       mediaPlaybackProvider.select((v) => v.state),
@@ -62,7 +62,7 @@ class WindowTitleNotifier extends StateNotifier<String> {
   void _update() {
     final nav = _stackKeys.isNotEmpty ? _titles[_stackKeys.last] : null;
     final playerState = ref.read(mediaPlaybackProvider).state;
-    final appName = ref.read(musicDashboardModeProvider) ? 'Musique' : 'Cinéma';
+    final appName = ref.read(musicDashboardModeProvider) ? 'Musique' : 'NAS';
 
     final isPlayerActive = playerState != VideoPlayerState.disposed;
     final isPlayerMinimized = playerState == VideoPlayerState.minimized;

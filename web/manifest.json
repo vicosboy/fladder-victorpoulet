@@ -1,6 +1,6 @@
 {
-    "name": "Cinéma",
-    "short_name": "Cinéma",
+    "name": "NAS",
+    "short_name": "NAS",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#fbf9f6",
