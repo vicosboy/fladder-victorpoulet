@@ -1,0 +1,19 @@
+{
+    "name": "NAS",
+    "short_name": "NAS",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#fbf9f6",
+    "theme_color": "#956018",
+    "description": "Vidéothèque personnelle.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "cinema-icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
+}
