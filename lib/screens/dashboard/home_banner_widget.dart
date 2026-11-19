@@ -9,6 +9,7 @@ import 'package:fladder/screens/shared/media/carousel_banner.dart';
 import 'package:fladder/screens/shared/media/detailed_banner.dart';
 import 'package:fladder/screens/shared/media/media_banner.dart';
 import 'package:fladder/screens/shared/media/tv_slider_banner.dart';
+import 'package:fladder/util/adaptive_layout/adaptive_layout.dart';
 
 class HomeBannerWidget extends ConsumerWidget {
   final List<ItemBaseModel> posters;
@@ -22,36 +23,35 @@ class HomeBannerWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bannerType = ref.watch(homeSettingsProvider.select((value) => value.homeBanner));
-    final maxHeight = (MediaQuery.sizeOf(context).shortestSide * 0.6).clamp(125.0, 375.0);
+    final bannerType = ref.watch(
+      homeSettingsProvider.select((value) => value.homeBanner),
+    );
+    final isPhone = AdaptiveLayout.viewSizeOf(context) == ViewSize.phone;
+    final heightFactor = isPhone ? 0.48 : 0.6;
+    final maxHeight = (MediaQuery.sizeOf(context).shortestSide * heightFactor)
+        .clamp(125.0, 375.0);
 
     return switch (bannerType) {
       HomeBanner.carousel => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CarouselBanner(
-              items: posters,
-              maxHeight: maxHeight,
-            ),
-            const SizedBox(height: 24)
-          ],
-        ),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CarouselBanner(items: posters, maxHeight: maxHeight),
+          const SizedBox(height: 24),
+        ],
+      ),
       HomeBanner.banner => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: MediaBanner(
-            items: posters,
-            maxHeight: maxHeight,
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: MediaBanner(items: posters, maxHeight: maxHeight),
+      ),
       HomeBanner.detailedBanner => DetailedBanner(
-          posters: posters,
-          onSelect: onSelect,
-        ),
+        posters: posters,
+        onSelect: onSelect,
+      ),
       HomeBanner.tvSliderBanner => TVSliderBanner(
-          items: posters,
-          onSelect: onSelect,
-          maxHeight: maxHeight,
-        ),
+        items: posters,
+        onSelect: onSelect,
+        maxHeight: maxHeight,
+      ),
       _ => const SizedBox.shrink(),
     };
   }

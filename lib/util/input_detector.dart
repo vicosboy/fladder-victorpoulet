@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -25,9 +24,9 @@ class InputDetector extends StatefulWidget {
 class _InputDetectorState extends State<InputDetector> {
   late InputDevice _currentInput = widget.htpcMode
       ? InputDevice.dPad
-      : (widget.isDesktop || kIsWeb)
-          ? InputDevice.pointer
-          : InputDevice.touch;
+      : widget.isDesktop
+      ? InputDevice.pointer
+      : InputDevice.touch;
 
   @override
   void initState() {
@@ -94,9 +93,7 @@ class _InputDetectorState extends State<InputDetector> {
       behavior: HitTestBehavior.translucent,
       child: IgnorePointer(
         ignoring: _currentInput == InputDevice.dPad,
-        child: Builder(
-          builder: (context) => widget.child(_currentInput),
-        ),
+        child: Builder(builder: (context) => widget.child(_currentInput)),
       ),
     );
   }

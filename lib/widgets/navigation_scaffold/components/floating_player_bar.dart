@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +19,8 @@ import 'package:fladder/widgets/navigation_scaffold/components/music_player_bar_
 import 'package:fladder/widgets/navigation_scaffold/components/video_player_bar_content.dart';
 import 'package:fladder/widgets/shared/item_actions.dart';
 
-double floatingPlayerHeight(BuildContext context) => switch (AdaptiveLayout.viewSizeOf(context)) {
+double floatingPlayerHeight(BuildContext context) =>
+    switch (AdaptiveLayout.viewSizeOf(context)) {
       ViewSize.phone => 75,
       ViewSize.tablet => 85,
       ViewSize.desktop => 95,
@@ -31,7 +31,8 @@ class FloatingPlayerBar extends ConsumerStatefulWidget {
   const FloatingPlayerBar({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _CurrentlyPlayingBarState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _CurrentlyPlayingBarState();
 }
 
 class _CurrentlyPlayingBarState extends ConsumerState<FloatingPlayerBar> {
@@ -39,7 +40,9 @@ class _CurrentlyPlayingBarState extends ConsumerState<FloatingPlayerBar> {
 
   Future<void> openFullScreenPlayer() async {
     setState(() => showExpandButton = false);
-    ref.read(mediaPlaybackProvider.notifier).update((state) => state.copyWith(state: VideoPlayerState.fullScreen));
+    ref
+        .read(mediaPlaybackProvider.notifier)
+        .update((state) => state.copyWith(state: VideoPlayerState.fullScreen));
     final item = ref.read(playBackModel.select((value) => value?.item));
     if (item is AudioModel) {
       if (context.mounted) {
@@ -54,7 +57,7 @@ class _CurrentlyPlayingBarState extends ConsumerState<FloatingPlayerBar> {
         },
       ),
     );
-    if (AdaptiveLayout.of(context).isDesktop || kIsWeb) {
+    if (AdaptiveLayout.useDesktopChrome(context)) {
       final fullScreen = await windowManager.isFullScreen();
       if (fullScreen) {
         await windowManager.setFullScreen(false);
@@ -80,34 +83,49 @@ class _CurrentlyPlayingBarState extends ConsumerState<FloatingPlayerBar> {
     final itemActions = [
       if (item is! AudioModel)
         ItemActionButton(
-            label: Text(context.localized.audio(1)),
-            icon: Consumer(
-              builder: (context, ref, child) {
-                final playerVolume = ref.watch(videoPlayerSettingsProvider.select((value) => value.volume));
-                return Icon(playerVolume == 0 ? IconsaxPlusBold.volume_cross : IconsaxPlusBold.volume_high);
-              },
-            ),
-            action: () {
-              final player = ref.read(videoPlayerProvider);
-              final playerVolume = ref.read(videoPlayerSettingsProvider.select((value) => value.volume));
-              final volume = playerVolume == 0 ? 100.0 : 0.0;
-              player.setVolume(volume);
-            }),
+          label: Text(context.localized.audio(1)),
+          icon: Consumer(
+            builder: (context, ref, child) {
+              final playerVolume = ref.watch(
+                videoPlayerSettingsProvider.select((value) => value.volume),
+              );
+              return Icon(
+                playerVolume == 0
+                    ? IconsaxPlusBold.volume_cross
+                    : IconsaxPlusBold.volume_high,
+              );
+            },
+          ),
+          action: () {
+            final player = ref.read(videoPlayerProvider);
+            final playerVolume = ref.read(
+              videoPlayerSettingsProvider.select((value) => value.volume),
+            );
+            final volume = playerVolume == 0 ? 100.0 : 0.0;
+            player.setVolume(volume);
+          },
+        ),
       ItemActionButton(
-        label: Text(isFavourite ? context.localized.removeAsFavorite : context.localized.addAsFavorite),
+        label: Text(
+          isFavourite
+              ? context.localized.removeAsFavorite
+              : context.localized.addAsFavorite,
+        ),
         icon: Icon(
           color: isFavourite ? Colors.red : null,
           isFavourite ? IconsaxPlusBold.heart : IconsaxPlusLinear.heart,
         ),
         action: () async {
-          final result = (await ref.read(userProvider.notifier).setAsFavorite(
-                    !isFavourite,
-                    item?.id ?? "",
-                  ))
-              ?.body;
+          final result =
+              (await ref
+                      .read(userProvider.notifier)
+                      .setAsFavorite(!isFavourite, item?.id ?? ""))
+                  ?.body;
 
           if (result != null) {
-            ref.read(playBackModel.notifier).update((state) => state?.updateUserData(result));
+            ref
+                .read(playBackModel.notifier)
+                .update((state) => state?.updateUserData(result));
           }
         },
       ),
@@ -137,7 +155,10 @@ class _CurrentlyPlayingBarState extends ConsumerState<FloatingPlayerBar> {
         },
         direction: DismissDirection.vertical,
         child: InkWell(
-          onLongPress: () => FladderSnack.show("Swipe up/down to open/close the player", context: context),
+          onLongPress: () => FladderSnack.show(
+            "Swipe up/down to open/close the player",
+            context: context,
+          ),
           child: Container(
             height: floatingPlayerHeight(context),
             clipBehavior: Clip.hardEdge,
@@ -145,9 +166,10 @@ class _CurrentlyPlayingBarState extends ConsumerState<FloatingPlayerBar> {
               color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: FladderTheme.defaultShape.borderRadius,
             ),
-            child: LayoutBuilder(builder: (context, constraints) {
-              return switch (item) {
-                AudioModel audioItem => MusicFloatingPlayerBarContent(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return switch (item) {
+                  AudioModel audioItem => MusicFloatingPlayerBarContent(
                     constraints: constraints,
                     item: audioItem,
                     itemActions: itemActions,
@@ -155,7 +177,7 @@ class _CurrentlyPlayingBarState extends ConsumerState<FloatingPlayerBar> {
                     onShowExpandButton: _setShowExpandButton,
                     openFullScreenPlayer: openFullScreenPlayer,
                   ),
-                _ => VideoFloatingPlayerBarContent(
+                  _ => VideoFloatingPlayerBarContent(
                     constraints: constraints,
                     item: item,
                     itemActions: itemActions,
@@ -163,8 +185,9 @@ class _CurrentlyPlayingBarState extends ConsumerState<FloatingPlayerBar> {
                     onShowExpandButton: _setShowExpandButton,
                     openFullScreenPlayer: openFullScreenPlayer,
                   ),
-              };
-            }),
+                };
+              },
+            ),
           ),
         ),
       ),

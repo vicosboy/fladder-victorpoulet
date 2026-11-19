@@ -21,11 +21,7 @@ import 'package:fladder/util/poster_defaults.dart';
 import 'package:fladder/util/resolution_checker.dart';
 import 'package:fladder/widgets/keyboard/slide_in_keyboard.dart';
 
-enum InputDevice {
-  touch,
-  pointer,
-  dPad,
-}
+enum InputDevice { touch, pointer, dPad }
 
 enum ViewSize {
   phone,
@@ -36,11 +32,11 @@ enum ViewSize {
   const ViewSize();
 
   String label(BuildContext context) => switch (this) {
-        ViewSize.phone => context.localized.phone,
-        ViewSize.tablet => context.localized.tablet,
-        ViewSize.desktop => context.localized.desktop,
-        ViewSize.television => context.localized.television,
-      };
+    ViewSize.phone => context.localized.phone,
+    ViewSize.tablet => context.localized.tablet,
+    ViewSize.desktop => context.localized.desktop,
+    ViewSize.television => context.localized.television,
+  };
 
   bool operator >(ViewSize other) => index > other.index;
   bool operator >=(ViewSize other) => index >= other.index;
@@ -55,9 +51,9 @@ enum LayoutMode {
   const LayoutMode();
 
   String label(BuildContext context) => switch (this) {
-        LayoutMode.single => context.localized.layoutModeSingle,
-        LayoutMode.dual => context.localized.layoutModeDual,
-      };
+    LayoutMode.single => context.localized.layoutModeSingle,
+    LayoutMode.dual => context.localized.layoutModeDual,
+  };
 
   bool operator >(ViewSize other) => index > other.index;
   bool operator >=(ViewSize other) => index >= other.index;
@@ -68,14 +64,11 @@ enum LayoutMode {
 class AdaptiveLayout extends InheritedWidget {
   final AdaptiveLayoutModel data;
 
-  const AdaptiveLayout({
-    super.key,
-    required this.data,
-    required super.child,
-  });
+  const AdaptiveLayout({super.key, required this.data, required super.child});
 
   static AdaptiveLayoutModel of(BuildContext context) {
-    final inherited = context.dependOnInheritedWidgetOfExactType<AdaptiveLayout>();
+    final inherited = context
+        .dependOnInheritedWidgetOfExactType<AdaptiveLayout>();
     assert(inherited != null, 'No AdaptiveLayout found in context');
     return inherited!.data;
   }
@@ -104,7 +97,17 @@ class AdaptiveLayout extends InheritedWidget {
     return result?.data.isDesktop ?? false;
   }
 
-  static EdgeInsets adaptivePadding(BuildContext context, {double horizontalPadding = 12}) {
+  /// Web should only use desktop chrome on genuinely larger displays.
+  /// Treating every browser as a desktop makes phone browsers jump between
+  /// pointer and touch layouts while scrolling.
+  static bool useDesktopChrome(BuildContext context) =>
+      of(context).isDesktop ||
+      (kIsWeb && viewSizeOf(context) != ViewSize.phone);
+
+  static EdgeInsets adaptivePadding(
+    BuildContext context, {
+    double horizontalPadding = 12,
+  }) {
     final viewPadding = MediaQuery.paddingOf(context);
     final textDirection = Directionality.of(context);
     final directionalPadding = EdgeInsetsDirectional.only(
@@ -119,10 +122,13 @@ class AdaptiveLayout extends InheritedWidget {
     );
   }
 
-  static LayoutMode layoutModeOf(BuildContext context) => maybeOf(context)!.data.layoutMode;
-  static ViewSize viewSizeOf(BuildContext context) => maybeOf(context)!.data.viewSize;
+  static LayoutMode layoutModeOf(BuildContext context) =>
+      maybeOf(context)!.data.layoutMode;
+  static ViewSize viewSizeOf(BuildContext context) =>
+      maybeOf(context)!.data.viewSize;
 
-  static InputDevice inputDeviceOf(BuildContext context) => maybeOf(context)!.data.inputDevice;
+  static InputDevice inputDeviceOf(BuildContext context) =>
+      maybeOf(context)!.data.inputDevice;
 
   @override
   bool updateShouldNotify(AdaptiveLayout oldWidget) => data != oldWidget.data;
@@ -140,7 +146,8 @@ class AdaptiveLayoutBuilder extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _AdaptiveLayoutBuilderState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _AdaptiveLayoutBuilderState();
 }
 
 class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
@@ -168,7 +175,8 @@ class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
 
   Future<void> checkLeanBackMode() async {
     if (ref.read(clientSettingsProvider).forceLeanBackMode) return;
-    if (ref.read(argumentsStateProvider).leanBackMode || await resolveLeanBackEnabled()) {
+    if (ref.read(argumentsStateProvider).leanBackMode ||
+        await resolveLeanBackEnabled()) {
       ref.read(clientSettingsProvider.notifier).setForceLeanBackMode(true);
     }
   }
@@ -190,9 +198,15 @@ class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
   }
 
   void calculateLayout() {
+    final size = MediaQuery.sizeOf(context);
+    if (size.shortestSide < 600) {
+      viewSize = ViewSize.phone;
+      return;
+    }
+
     ViewSize? newType;
     for (var element in layoutPoints) {
-      if (MediaQuery.of(context).size.width > element.start && MediaQuery.of(context).size.width < element.end) {
+      if (size.width > element.start && size.width < element.end) {
         newType = element.type;
       }
     }
@@ -201,7 +215,8 @@ class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
 
   void calculateSize() {
     LayoutMode newSize;
-    if (MediaQuery.of(context).size.width > 0 && MediaQuery.of(context).size.width < 960) {
+    if (MediaQuery.of(context).size.width > 0 &&
+        MediaQuery.of(context).size.width < 960) {
       newSize = LayoutMode.single;
     } else {
       newSize = LayoutMode.dual;
@@ -214,17 +229,34 @@ class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
     final arguments = ref.watch(argumentsStateProvider);
     final htpcMode = arguments.htpcMode;
     final isAndroidTV = arguments.leanBackMode;
-    final acceptedLayouts =
-        htpcMode ? {LayoutMode.dual} : ref.watch(homeSettingsProvider.select((value) => value.screenLayouts));
-    final acceptedViewSizes =
-        htpcMode ? {ViewSize.television} : ref.watch(homeSettingsProvider.select((value) => value.layoutStates));
+    final acceptedLayouts = htpcMode
+        ? {LayoutMode.dual}
+        : ref.watch(
+            homeSettingsProvider.select((value) => value.screenLayouts),
+          );
+    final acceptedViewSizes = htpcMode
+        ? {ViewSize.television}
+        : ref.watch(homeSettingsProvider.select((value) => value.layoutStates));
 
-    final selectedViewSize = selectAvailableOrSmaller<ViewSize>(viewSize, acceptedViewSizes, ViewSize.values);
-    final selectedLayoutMode = selectAvailableOrSmaller<LayoutMode>(layoutMode, acceptedLayouts, LayoutMode.values);
+    final selectedViewSize = selectAvailableOrSmaller<ViewSize>(
+      viewSize,
+      acceptedViewSizes,
+      ViewSize.values,
+    );
+    final selectedLayoutMode = selectAvailableOrSmaller<LayoutMode>(
+      layoutMode,
+      acceptedLayouts,
+      LayoutMode.values,
+    );
 
-    final posterDefaults = const PosterDefaults(size: 350, ratio: 0.55);
+    final isCompact = selectedViewSize == ViewSize.phone;
+    final posterDefaults = PosterDefaults(
+      size: isCompact ? 270 : 350,
+      ratio: 0.55,
+    );
 
-    final currentLayout = widget.adaptiveLayout ??
+    final currentLayout =
+        widget.adaptiveLayout ??
         AdaptiveLayoutModel(
           viewSize: selectedViewSize,
           layoutMode: selectedLayoutMode,
@@ -240,7 +272,8 @@ class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
 
     final mediaQuery = MediaQuery.of(context);
 
-    final useAdditionalPadding = isDesktop || kIsWeb || isAndroidTV;
+    final useAdditionalPadding =
+        isDesktop || (kIsWeb && !isCompact) || isAndroidTV;
 
     final isOffline = ref.watch(offlineStateProvider);
     final isIncognitoMode = ref.watch(incognitoProvider);
@@ -253,11 +286,11 @@ class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
 
     final topPadding = isAndroidTV
         ? hasStatusBanner
-            ? 21.0
-            : 4.0
+              ? 21.0
+              : 4.0
         : kIsWeb
-            ? 12.0 + bannerHeight
-            : defaultTitleBarHeight;
+        ? 12.0 + bannerHeight
+        : defaultTitleBarHeight;
 
     return ValueListenableBuilder(
       valueListenable: isKeyboardOpen,
@@ -267,7 +300,9 @@ class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
           htpcMode: htpcMode,
           child: (input) => MediaQuery(
             data: mediaQuery.copyWith(
-              navigationMode: input == InputDevice.dPad ? NavigationMode.directional : NavigationMode.traditional,
+              navigationMode: input == InputDevice.dPad
+                  ? NavigationMode.directional
+                  : NavigationMode.traditional,
               padding: (useAdditionalPadding
                   ? EdgeInsets.only(top: topPadding, bottom: 16)
                   : mediaQuery.padding.copyWith(
@@ -277,7 +312,9 @@ class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
                     )),
               viewPadding: useAdditionalPadding
                   ? EdgeInsets.only(top: topPadding, bottom: 16)
-                  : mediaQuery.viewPadding.copyWith(top: mediaQuery.viewPadding.top + bannerHeight),
+                  : mediaQuery.viewPadding.copyWith(
+                      top: mediaQuery.viewPadding.top + bannerHeight,
+                    ),
             ),
             child: AdaptiveLayout(
               data: currentLayout.copyWith(
@@ -297,8 +334,8 @@ class _AdaptiveLayoutBuilderState extends ConsumerState<AdaptiveLayoutBuilder> {
                             : widget.child(context),
                       )
                     : widget.adaptiveLayout == null
-                        ? DebugBanner(child: widget.child(context))
-                        : widget.child(context),
+                    ? DebugBanner(child: widget.child(context))
+                    : widget.child(context),
               ),
             ),
           ),

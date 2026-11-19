@@ -9,6 +9,7 @@ import 'package:fladder/models/items/images_models.dart';
 import 'package:fladder/models/settings/client_settings_model.dart';
 import 'package:fladder/providers/api_provider.dart';
 import 'package:fladder/providers/settings/client_settings_provider.dart';
+import 'package:fladder/util/adaptive_layout/adaptive_layout.dart';
 import 'package:fladder/util/fladder_image.dart';
 
 final _backgroundImageProvider = StateProvider<ImageData?>((ref) => null);
@@ -16,10 +17,15 @@ final _backgroundImageProvider = StateProvider<ImageData?>((ref) => null);
 class BackgroundImage extends ConsumerStatefulWidget {
   final List<ItemBaseModel> items;
   final List<ImagesData> images;
-  const BackgroundImage({this.items = const [], this.images = const [], super.key});
+  const BackgroundImage({
+    this.items = const [],
+    this.images = const [],
+    super.key,
+  });
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _BackgroundImageState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _BackgroundImageState();
 }
 
 class _BackgroundImageState extends ConsumerState<BackgroundImage> {
@@ -32,15 +38,22 @@ class _BackgroundImageState extends ConsumerState<BackgroundImage> {
   @override
   void didUpdateWidget(covariant BackgroundImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!oldWidget.items.equals(widget.items) || !oldWidget.images.equals(widget.images)) {
+    if (!oldWidget.items.equals(widget.items) ||
+        !oldWidget.images.equals(widget.images)) {
       updateItems();
     }
   }
 
   void updateItems() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || AdaptiveLayout.viewSizeOf(context) == ViewSize.phone) {
+        return;
+      }
+
       final enabled = ref.read(
-        clientSettingsProvider.select((value) => value.backgroundImage != BackgroundType.disabled),
+        clientSettingsProvider.select(
+          (value) => value.backgroundImage != BackgroundType.disabled,
+        ),
       );
       if (!enabled || !mounted) return;
 
@@ -57,9 +70,12 @@ class _BackgroundImageState extends ConsumerState<BackgroundImage> {
         };
 
         if (itemId != null) {
-          final apiResponse = await ref.read(jellyApiProvider).usersUserIdItemsItemIdGet(itemId: itemId);
+          final apiResponse = await ref
+              .read(jellyApiProvider)
+              .usersUserIdItemsItemIdGet(itemId: itemId);
 
-          newImage = apiResponse.body?.parentBaseModel.getPosters?.randomBackDrop ??
+          newImage =
+              apiResponse.body?.parentBaseModel.getPosters?.randomBackDrop ??
               apiResponse.body?.getPosters?.randomBackDrop ??
               apiResponse.body?.getPosters?.primary;
         }
@@ -73,13 +89,23 @@ class _BackgroundImageState extends ConsumerState<BackgroundImage> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(clientSettingsProvider.select((value) => value.backgroundImage));
+    if (AdaptiveLayout.viewSizeOf(context) == ViewSize.phone) {
+      return const SizedBox.shrink();
+    }
+
+    final settings = ref.watch(
+      clientSettingsProvider.select((value) => value.backgroundImage),
+    );
     final enabled = settings != BackgroundType.disabled;
     final image = ref.watch(_backgroundImageProvider);
 
     if (!enabled || image == null) return const SizedBox.shrink();
 
-    final backgroundOpacity = ref.watch(clientSettingsProvider.select((value) => value.backgroundImage.opacityValues));
+    final backgroundOpacity = ref.watch(
+      clientSettingsProvider.select(
+        (value) => value.backgroundImage.opacityValues,
+      ),
+    );
 
     return RepaintBoundary(
       child: AnimatedSwitcher(
@@ -87,7 +113,9 @@ class _BackgroundImageState extends ConsumerState<BackgroundImage> {
         child: Container(
           key: ValueKey(image.key),
           foregroundDecoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: backgroundOpacity),
+            color: Theme.of(
+              context,
+            ).scaffoldBackgroundColor.withValues(alpha: backgroundOpacity),
           ),
           child: FladderImage(
             image: image,

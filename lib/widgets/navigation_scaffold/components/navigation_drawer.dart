@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
@@ -40,15 +39,22 @@ class NestedNavigationDrawer extends ConsumerWidget {
       surfaceTintColor: isExpanded ? Colors.transparent : null,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(8, AdaptiveLayout.of(context).isDesktop || kIsWeb ? 0 : 16, 16, 0),
+          padding: EdgeInsets.fromLTRB(
+            8,
+            AdaptiveLayout.useDesktopChrome(context) ? 0 : 16,
+            16,
+            0,
+          ),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   context.localized.navigation,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
-                      ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.75),
+                  ),
                 ),
               ),
               IconButton(
@@ -74,7 +80,9 @@ class NestedNavigationDrawer extends ConsumerWidget {
           horizontal: true,
           expanded: true,
           icon: const SizedBox.shrink(),
-          customIcon: const ExcludeFocusTraversal(child: SizedBox.square(dimension: 40, child: SettingsUserIcon())),
+          customIcon: const ExcludeFocusTraversal(
+            child: SizedBox.square(dimension: 40, child: SettingsUserIcon()),
+          ),
           onPressed: () {
             if (AdaptiveLayout.layoutModeOf(context) == LayoutMode.single) {
               context.router.push(const SettingsRoute());
@@ -83,7 +91,7 @@ class NestedNavigationDrawer extends ConsumerWidget {
             }
           },
         ),
-        if (AdaptiveLayout.of(context).isDesktop || kIsWeb) const SizedBox(height: 8),
+        if (AdaptiveLayout.useDesktopChrome(context)) const SizedBox(height: 8),
       ],
     );
   }

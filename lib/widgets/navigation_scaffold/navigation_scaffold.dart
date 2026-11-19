@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart' hide ConnectionState;
 
 import 'package:auto_route/auto_route.dart';
@@ -42,14 +41,16 @@ class NavigationScaffold extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _NavigationScaffoldState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _NavigationScaffoldState();
 }
 
 class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
   final GlobalKey<ScaffoldState> _key = GlobalKey();
 
-  int get currentIndex =>
-      widget.destinations.indexWhere((element) => element.route?.routeName == widget.currentRouteName);
+  int get currentIndex => widget.destinations.indexWhere(
+    (element) => element.route?.routeName == widget.currentRouteName,
+  );
   String get currentLocation => widget.currentRouteName ?? "Nothing";
 
   @override
@@ -66,7 +67,8 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
   @override
   void didUpdateWidget(covariant NavigationScaffold oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.currentRouteName != oldWidget.currentRouteName && currentIndex != -1) {
+    if (widget.currentRouteName != oldWidget.currentRouteName &&
+        currentIndex != -1) {
       Future.microtask(() {
         if (mounted) {
           ref.read(windowTitleProvider.notifier).clearStack();
@@ -78,14 +80,19 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
   @override
   Widget build(BuildContext context) {
     final views = ref.watch(viewsProvider.select((value) => value.views));
-    final playerState = ref.watch(mediaPlaybackProvider.select((value) => value.state));
+    final playerState = ref.watch(
+      mediaPlaybackProvider.select((value) => value.state),
+    );
     final currentItem = ref.watch(playBackModel.select((value) => value?.item));
     final showPlayerBar = playerState == VideoPlayerState.minimized;
-    final showAudioFullScreen = playerState == VideoPlayerState.fullScreen && currentItem is AudioModel;
-    final showAudioSidePanel = showAudioFullScreen && AdaptiveLayout.layoutModeOf(context) == LayoutMode.dual;
+    final showAudioFullScreen =
+        playerState == VideoPlayerState.fullScreen && currentItem is AudioModel;
+    final showAudioSidePanel =
+        showAudioFullScreen &&
+        AdaptiveLayout.layoutModeOf(context) == LayoutMode.dual;
     final showAudioOverlay = showAudioFullScreen && !showAudioSidePanel;
 
-    final isDesktop = AdaptiveLayout.of(context).isDesktop || kIsWeb;
+    final isDesktop = AdaptiveLayout.useDesktopChrome(context);
 
     final mediaQuery = MediaQuery.of(context);
 
@@ -96,15 +103,23 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
     final bottomViewPadding = isDesktop ? 12.0 : viewPaddingOf.bottom;
     final isHomeScreen = currentIndex != -1;
 
-    final calculatedBottomViewPadding =
-        showPlayerBar ? floatingPlayerHeight(context) + bottomViewPadding : bottomViewPadding;
+    final calculatedBottomViewPadding = showPlayerBar
+        ? floatingPlayerHeight(context) + bottomViewPadding
+        : bottomViewPadding;
 
     final currentTab =
-        HomeTabs.values.elementAtOrNull(currentIndex.clamp(0, HomeTabs.values.length - 1)) ?? HomeTabs.dashboard;
+        HomeTabs.values.elementAtOrNull(
+          currentIndex.clamp(0, HomeTabs.values.length - 1),
+        ) ??
+        HomeTabs.dashboard;
 
-    final fullScreenChildRoute = fullScreenRoutes.contains(context.router.current.name);
+    final fullScreenChildRoute = fullScreenRoutes.contains(
+      context.router.current.name,
+    );
 
-    final drawer = !showAudioFullScreen && homeRoutes.any((element) => element.name.contains(currentLocation))
+    final drawer =
+        !showAudioFullScreen &&
+            homeRoutes.any((element) => element.name.contains(currentLocation))
         ? NestedNavigationDrawer(
             toggleExpanded: (value) => _key.currentState?.closeDrawer(),
             views: views,
@@ -117,8 +132,11 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
     Widget buildMainScaffold(BuildContext scaffoldContext) {
       final scaffold = Scaffold(
         key: _key,
-        appBar: fullScreenChildRoute ||
-                (showAudioFullScreen && AdaptiveLayout.layoutModeOf(scaffoldContext) == LayoutMode.single)
+        appBar:
+            fullScreenChildRoute ||
+                (showAudioFullScreen &&
+                    AdaptiveLayout.layoutModeOf(scaffoldContext) ==
+                        LayoutMode.single)
             ? null
             : FladderAppBar(
                 isDesktop: isDesktop,
@@ -128,20 +146,36 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
         resizeToAvoidBottomInset: false,
         extendBody: true,
         floatingActionButton:
-            !showAudioFullScreen && AdaptiveLayout.layoutModeOf(scaffoldContext) == LayoutMode.single && isHomeScreen
-                ? widget.destinations.elementAtOrNull(currentIndex)?.floatingActionButton?.normal
-                : null,
+            !showAudioFullScreen &&
+                AdaptiveLayout.layoutModeOf(scaffoldContext) ==
+                    LayoutMode.single &&
+                isHomeScreen
+            ? widget.destinations
+                  .elementAtOrNull(currentIndex)
+                  ?.floatingActionButton
+                  ?.normal
+            : null,
         drawer: drawer != null ? DrawerBackGesture(child: drawer) : null,
-        bottomNavigationBar: AdaptiveLayout.viewSizeOf(scaffoldContext) == ViewSize.television
+        bottomNavigationBar:
+            AdaptiveLayout.viewSizeOf(scaffoldContext) == ViewSize.television
             ? SizedBox(height: calculatedBottomViewPadding)
             : AnimatedVisibility(
-                visible: !showAudioFullScreen &&
-                    (isHomeScreen && AdaptiveLayout.viewSizeOf(scaffoldContext) == ViewSize.phone),
+                visible:
+                    !showAudioFullScreen &&
+                    (isHomeScreen &&
+                        AdaptiveLayout.viewSizeOf(scaffoldContext) ==
+                            ViewSize.phone),
                 hiddenHeight: calculatedBottomViewPadding,
                 duration: const Duration(milliseconds: 250),
                 child: HideOnScroll(
-                  controller: AdaptiveLayout.scrollOf(scaffoldContext, currentTab),
-                  forceHide: !homeRoutes.any((element) => element.name.contains(currentLocation)),
+                  controller: AdaptiveLayout.scrollOf(
+                    scaffoldContext,
+                    currentTab,
+                  ),
+                  canHide: false,
+                  forceHide: !homeRoutes.any(
+                    (element) => element.name.contains(currentLocation),
+                  ),
                   child: NestedBottomAppBar(
                     child: SizedBox(
                       height: 65,
@@ -151,7 +185,8 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
                         children: widget.destinations
                             .map(
                               (destination) => destination.toNavigationButton(
-                                widget.currentRouteName == destination.route?.routeName,
+                                widget.currentRouteName ==
+                                    destination.route?.routeName,
                                 false,
                                 false,
                               ),
@@ -168,7 +203,10 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
                 children: [
                   NavigationBody(
                     child: TabBackGesture(
-                      enabled: !showAudioOverlay && currentIndex > 0 && context.router.stackData.length < 2,
+                      enabled:
+                          !showAudioOverlay &&
+                          currentIndex > 0 &&
+                          context.router.stackData.length < 2,
                       onBack: () => widget.destinations.first.action!(),
                       child: widget.nestedChild!,
                     ),
@@ -178,7 +216,9 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
                     currentLocation: currentLocation,
                     drawerKey: _key,
                   ),
-                  if (drawer != null && AdaptiveLayout.inputDeviceOf(scaffoldContext) == InputDevice.touch)
+                  if (drawer != null &&
+                      AdaptiveLayout.inputDeviceOf(scaffoldContext) ==
+                          InputDevice.touch)
                     const DrawerEdgeBlocker(),
                 ],
               )
@@ -193,9 +233,7 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
     }
 
     final Widget audioOverlay = showAudioFullScreen
-        ? const AudioPlayerFullScreen(
-            key: ValueKey("audio_full_screen"),
-          )
+        ? const AudioPlayerFullScreen(key: ValueKey("audio_full_screen"))
         : const SizedBox.shrink();
 
     return PopScope(
@@ -216,7 +254,9 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
             child: MediaQuery(
               data: mediaQuery.copyWith(
                 padding: paddingOf.copyWith(
-                  bottom: showPlayerBar ? floatingPlayerHeight(context) + 12 + bottomPadding : bottomPadding,
+                  bottom: showPlayerBar
+                      ? floatingPlayerHeight(context) + 12 + bottomPadding
+                      : bottomPadding,
                 ),
                 viewPadding: viewPaddingOf.copyWith(
                   top: mediaQuery.viewPadding.top,
@@ -226,23 +266,21 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
               child: SplitArea(
                 axis: Axis.horizontal,
                 areas: [
-                  Area(
-                    initialArea: 0.7,
-                  ),
+                  Area(initialArea: 0.7),
                   Area(
                     initialArea: 0.3,
                     minArea: 0.2,
                     maxArea: 0.5,
-                    constraints: const BoxConstraints(minWidth: 200, maxWidth: 500),
+                    constraints: const BoxConstraints(
+                      minWidth: 200,
+                      maxWidth: 500,
+                    ),
                   ),
                 ],
                 children: [
                   buildMainScaffold(context),
                   if (showAudioSidePanel)
-                    SizedBox(
-                      width: double.infinity,
-                      child: audioOverlay,
-                    ),
+                    SizedBox(width: double.infinity, child: audioOverlay),
                 ],
               ),
             ),
@@ -252,7 +290,9 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
             child: AnimatedFadeSize(
               child: SizedBox(
                 width: double.infinity,
-                child: showPlayerBar ? const FloatingPlayerBar() : const SizedBox.shrink(),
+                child: showPlayerBar
+                    ? const FloatingPlayerBar()
+                    : const SizedBox.shrink(),
               ),
             ),
           ),
@@ -261,10 +301,14 @@ class _NavigationScaffoldState extends ConsumerState<NavigationScaffold> {
               enabled: true,
               onBack: () => ref
                   .read(mediaPlaybackProvider.notifier)
-                  .update((state) => state.copyWith(state: VideoPlayerState.minimized)),
+                  .update(
+                    (state) =>
+                        state.copyWith(state: VideoPlayerState.minimized),
+                  ),
               child: audioOverlay,
             ),
-          if (!AdaptiveLayout.of(context).isDesktop) const Align(alignment: Alignment.topCenter, child: StatusBanners())
+          if (!AdaptiveLayout.of(context).isDesktop)
+            const Align(alignment: Alignment.topCenter, child: StatusBanners()),
         ],
       ),
     );
