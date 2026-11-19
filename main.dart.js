@@ -29142,7 +29142,7 @@ cM0:function cM0(a){this.a=a},
 cLZ:function cLZ(a){this.a=a},
 cM_:function cM_(a){this.a=a},
 cLN:function cLN(a){this.a=a},
-eTK(a){var s=new A.OO(a,A.B(t.K,t.N),A.a([],t.jl),new A.du(t.FP),"Cin\xe9ma")
+eTK(a){var s=new A.OO(a,A.B(t.K,t.N),A.a([],t.jl),new A.du(t.FP),"NAS")
 s.bB5(a)
 return s},
 e_l:function e_l(){},
@@ -195194,7 +195194,7 @@ if(s)this.KX()},
 KX(){var s,r,q,p,o=this,n=o.x,m=n.length!==0?o.w.h(0,B.c.gad(n)):null
 n=o.r
 s=n.p($.dI(),t.bY).a
-r=n.p($.KN(),t.y)?"Musique":"Cin\xe9ma"
+r=n.p($.KN(),t.y)?"Musique":"NAS"
 if(s!==B.qa&&s!==B.hO){n=o.y
 q=n==null?m:n}else q=m==null?o.y:m
 p=q!=null&&q.length!==0?r+" - "+q:r
