@@ -18,9 +18,7 @@ const enableCollectionTypes = {
   CollectionType.tvshows,
   CollectionType.homevideos,
   CollectionType.boxsets,
-  CollectionType.playlists,
   CollectionType.photos,
-  CollectionType.livetv,
   CollectionType.folders,
   CollectionType.music,
   CollectionType.musicvideos,
@@ -42,18 +40,32 @@ class ViewsNotifier extends StateNotifier<ViewsModel> {
   Future<ViewsModel?> fetchViews() async {
     if (state.loading) return null;
     try {
-      final showAllCollections = ref.read(clientSettingsProvider.select((value) => value.showAllCollectionTypes));
+      final showAllCollections = ref.read(
+        clientSettingsProvider.select((value) => value.showAllCollectionTypes),
+      );
       final response = await api.usersUserIdViewsGet();
       final previousViews = {for (final view in state.views) view.id: view};
-      final newList = response.body?.items
+      final newList =
+          response.body?.items
               ?.map((e) => ViewModel.fromBodyDto(e, ref))
-              .where((element) => showAllCollections ? true : enableCollectionTypes.contains(element.collectionType))
-              .map((e) => e.copyWith(recentlyAdded: previousViews[e.id]?.recentlyAdded))
+              .where(
+                (element) => showAllCollections
+                    ? true
+                    : enableCollectionTypes.contains(element.collectionType),
+              )
+              .map(
+                (e) => e.copyWith(
+                  recentlyAdded: previousViews[e.id]?.recentlyAdded,
+                ),
+              )
               .toList() ??
           [];
 
       state = state.copyWith(
-          views: _applyLibraryOrdering(newList), dashboardViews: _dashboardViews(newList), loading: false);
+        views: _applyLibraryOrdering(newList),
+        dashboardViews: _dashboardViews(newList),
+        loading: false,
+      );
       return state;
     } catch (e) {
       return state.copyWith(loading: false);
@@ -61,40 +73,57 @@ class ViewsNotifier extends StateNotifier<ViewsModel> {
   }
 
   Future<void> fetchRecentlyAdded({Set<String> libraryIds = const {}}) async {
-    final showAllCollections = ref.read(clientSettingsProvider.select((value) => value.showAllCollectionTypes));
-    final views = state.dashboardViews.where((view) => libraryIds.isEmpty || libraryIds.contains(view.id));
+    final showAllCollections = ref.read(
+      clientSettingsProvider.select((value) => value.showAllCollectionTypes),
+    );
+    final views = state.dashboardViews.where(
+      (view) => libraryIds.isEmpty || libraryIds.contains(view.id),
+    );
     if (views.isEmpty) return;
     final revision = _requests.startAll(views.map((view) => view.id));
     try {
-      final recentlyAdded = Map.fromEntries(await Future.wait(views.map((e) async {
-        final recents = await api.usersUserIdItemsLatestGet(
-          parentId: e.id,
-          imageTypeLimit: 1,
-          limit: 16,
-          includeItemTypes:
-              (e.collectionType == CollectionType.books && !showAllCollections) ? [BaseItemKind.book] : null,
-          enableImageTypes: [
-            ImageType.primary,
-            ImageType.backdrop,
-            ImageType.thumb,
-          ],
-          fields: [
-            ItemFields.parentid,
-            ItemFields.mediastreams,
-            ItemFields.mediasources,
-            ItemFields.candelete,
-            ItemFields.candownload,
-            ItemFields.primaryimageaspectratio,
-            ItemFields.overview,
-          ],
-        );
-        return MapEntry(
-            e.id, recents.body?.map((e) => ItemBaseModel.fromBaseDto(e, ref)).toList() ?? <ItemBaseModel>[]);
-      })))
-        ..removeWhere((id, _) => !_requests.isLatest(id, revision));
+      final recentlyAdded = Map.fromEntries(
+        await Future.wait(
+          views.map((e) async {
+            final recents = await api.usersUserIdItemsLatestGet(
+              parentId: e.id,
+              imageTypeLimit: 1,
+              limit: 16,
+              includeItemTypes:
+                  (e.collectionType == CollectionType.books &&
+                      !showAllCollections)
+                  ? [BaseItemKind.book]
+                  : null,
+              enableImageTypes: [
+                ImageType.primary,
+                ImageType.backdrop,
+                ImageType.thumb,
+              ],
+              fields: [
+                ItemFields.parentid,
+                ItemFields.mediastreams,
+                ItemFields.mediasources,
+                ItemFields.candelete,
+                ItemFields.candownload,
+                ItemFields.primaryimageaspectratio,
+                ItemFields.overview,
+              ],
+            );
+            return MapEntry(
+              e.id,
+              recents.body
+                      ?.map((e) => ItemBaseModel.fromBaseDto(e, ref))
+                      .toList() ??
+                  <ItemBaseModel>[],
+            );
+          }),
+        ),
+      )..removeWhere((id, _) => !_requests.isLatest(id, revision));
 
       ViewModel withRecents(ViewModel view) =>
-          recentlyAdded.containsKey(view.id) ? view.copyWith(recentlyAdded: recentlyAdded[view.id]) : view;
+          recentlyAdded.containsKey(view.id)
+          ? view.copyWith(recentlyAdded: recentlyAdded[view.id])
+          : view;
 
       state = state.copyWith(
         views: state.views.map(withRecents).toList(),
@@ -104,7 +133,8 @@ class ViewsNotifier extends StateNotifier<ViewsModel> {
   }
 
   void updateRecentlyAddedItems(ItemBaseModel Function(ItemBaseModel) update) {
-    ViewModel updateView(ViewModel view) => view.copyWith(recentlyAdded: view.recentlyAdded.map(update).toList());
+    ViewModel updateView(ViewModel view) =>
+        view.copyWith(recentlyAdded: view.recentlyAdded.map(update).toList());
 
     state = state.copyWith(
       views: state.views.map(updateView).toList(),
@@ -114,8 +144,11 @@ class ViewsNotifier extends StateNotifier<ViewsModel> {
 
   void removeRecentlyAddedItems(Set<String> ids) {
     if (ids.isEmpty) return;
-    ViewModel removeFromView(ViewModel view) =>
-        view.copyWith(recentlyAdded: view.recentlyAdded.where((item) => !ids.contains(item.id)).toList());
+    ViewModel removeFromView(ViewModel view) => view.copyWith(
+      recentlyAdded: view.recentlyAdded
+          .where((item) => !ids.contains(item.id))
+          .toList(),
+    );
 
     state = state.copyWith(
       views: state.views.map(removeFromView).toList(),
@@ -123,11 +156,23 @@ class ViewsNotifier extends StateNotifier<ViewsModel> {
     );
   }
 
-  List<ViewModel> _dashboardViews(List<ViewModel> views) => _applyLibraryOrdering(
-      views.where((element) => !(ref.read(userProvider)?.latestItemsExcludes.contains(element.id) ?? true)).toList());
+  List<ViewModel> _dashboardViews(List<ViewModel> views) =>
+      _applyLibraryOrdering(
+        views
+            .where(
+              (element) =>
+                  !(ref
+                          .read(userProvider)
+                          ?.latestItemsExcludes
+                          .contains(element.id) ??
+                      true),
+            )
+            .toList(),
+      );
 
   List<ViewModel> _applyLibraryOrdering(List<ViewModel> views) {
-    final orderedViews = ref.read(userProvider)?.userConfiguration?.orderedViews ?? [];
+    final orderedViews =
+        ref.read(userProvider)?.userConfiguration?.orderedViews ?? [];
     if (orderedViews.isEmpty) return views;
 
     final viewMap = {for (var v in views) v.id: v};

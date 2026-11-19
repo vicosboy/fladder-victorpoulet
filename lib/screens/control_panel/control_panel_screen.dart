@@ -18,7 +18,8 @@ class ControlPanelScreen extends ConsumerStatefulWidget {
   const ControlPanelScreen({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _ControlPanelScreenState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _ControlPanelScreenState();
 }
 
 class _ControlPanelScreenState extends ConsumerState<ControlPanelScreen> {
@@ -32,7 +33,9 @@ class _ControlPanelScreenState extends ConsumerState<ControlPanelScreen> {
       builder: (context, content) {
         checkForNullIndex(context);
         return PopScope(
-          canPop: context.tabsRouter.activeIndex == 0 || AdaptiveLayout.layoutModeOf(context) == LayoutMode.dual,
+          canPop:
+              context.tabsRouter.activeIndex == 0 ||
+              AdaptiveLayout.layoutModeOf(context) == LayoutMode.dual,
           onPopInvokedWithResult: (didPop, result) {
             if (!didPop) {
               context.tabsRouter.setActiveIndex(0);
@@ -57,10 +60,7 @@ class _ControlPanelScreenState extends ConsumerState<ControlPanelScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(flex: 2, child: _leftPane(context)),
-                    Expanded(
-                      flex: 3,
-                      child: content,
-                    ),
+                    Expanded(flex: 3, child: content),
                   ],
                 ),
         );
@@ -72,7 +72,8 @@ class _ControlPanelScreenState extends ConsumerState<ControlPanelScreen> {
   void checkForNullIndex(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(const Duration(milliseconds: 125));
-      if (AdaptiveLayout.layoutModeOf(context) == LayoutMode.dual && context.tabsRouter.activeIndex == 0) {
+      if (AdaptiveLayout.layoutModeOf(context) == LayoutMode.dual &&
+          context.tabsRouter.activeIndex == 0) {
         const ControlDashboardRoute().navigate(context);
       }
     });
@@ -82,10 +83,13 @@ class _ControlPanelScreenState extends ConsumerState<ControlPanelScreen> {
     void navigateTo(PageRouteInfo route) => context.tabsRouter.navigate(route);
 
     bool containsRoute(PageRouteInfo route) =>
-        AdaptiveLayout.layoutModeOf(context) == LayoutMode.dual && context.tabsRouter.current.name == route.routeName;
+        AdaptiveLayout.layoutModeOf(context) == LayoutMode.dual &&
+        context.tabsRouter.current.name == route.routeName;
 
     return Padding(
-      padding: EdgeInsetsDirectional.only(start: AdaptiveLayout.of(context).sideBarWidth),
+      padding: EdgeInsetsDirectional.only(
+        start: AdaptiveLayout.of(context).sideBarWidth,
+      ),
       child: Container(
         color: context.colors.surface,
         child: SettingsScaffold(
@@ -122,13 +126,6 @@ class _ControlPanelScreenState extends ConsumerState<ControlPanelScreen> {
               selected: containsRoute(const ControlLibrariesRoute()),
               icon: IconsaxPlusLinear.book,
               onTap: () => navigateTo(const ControlLibrariesRoute()),
-            ),
-            SettingsListTile(
-              label: Text(context.localized.liveTV),
-              subLabel: Text(context.localized.liveTvManageTunersEpg),
-              selected: containsRoute(const ControlLiveTvRoute()),
-              icon: IconsaxPlusLinear.video_circle,
-              onTap: () => navigateTo(const ControlLiveTvRoute()),
             ),
             SettingsLabelDivider(label: context.localized.advanced),
             SettingsListTile(

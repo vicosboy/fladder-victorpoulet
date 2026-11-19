@@ -43,10 +43,12 @@ class ProfileSettingsPage extends ConsumerStatefulWidget {
   const ProfileSettingsPage({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _UserSettingsPageState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _UserSettingsPageState();
 }
 
-class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with WidgetsBindingObserver {
+class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage>
+    with WidgetsBindingObserver {
   bool? enabledBatteryOptimization;
 
   String _seerrStatusLabel(
@@ -54,14 +56,18 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
     SeerrCredentialsModel? credentials,
     SeerrUserModel? seerrUser,
   ) {
-    if (credentials == null || credentials.serverUrl.isEmpty) return context.localized.seerrNotConfigured;
+    if (credentials == null || credentials.serverUrl.isEmpty)
+      return context.localized.seerrNotConfigured;
 
     if (credentials.sessionCookie.isNotEmpty || credentials.apiKey.isNotEmpty) {
       if (seerrUser == null) {
         return context.localized.seerrLoadingUser;
       }
       final displayName =
-          seerrUser.displayName ?? seerrUser.username ?? seerrUser.email ?? context.localized.seerrUnknownUser;
+          seerrUser.displayName ??
+          seerrUser.username ??
+          seerrUser.email ??
+          context.localized.seerrUnknownUser;
       return context.localized.loggedInAs(displayName);
     }
 
@@ -80,7 +86,8 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
 
   Future<bool> checkBatteryOptimization() async {
     if (!kIsWeb && Platform.isAndroid) {
-      final optimizing = !(await BatteryOptimization.isIgnoringBatteryOptimizations());
+      final optimizing =
+          !(await BatteryOptimization.isIgnoringBatteryOptimizations());
       setState(() {
         enabledBatteryOptimization = optimizing;
       });
@@ -126,16 +133,23 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
           SettingsLabelDivider(label: context.localized.general),
           [
             SortableItemList(
-              items: user?.userSettings?.dashboardSorting.keys.toList() ?? DashboardSorting.values,
-              included: user?.userSettings?.dashboardSorting.included ?? <DashboardSorting>[],
+              items:
+                  (user?.userSettings?.dashboardSorting.keys.toList() ??
+                          DashboardSorting.values)
+                      .where((item) => item != DashboardSorting.liveTV)
+                      .toList(),
+              included:
+                  user?.userSettings?.dashboardSorting.included ??
+                  <DashboardSorting>[],
               itemBuilder: (filter) => Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  filter.label(context),
-                ),
+                child: Text(filter.label(context)),
               ),
-              onReorder: (reordered) => ref.read(userProvider.notifier).setDashboardSorting(reordered),
-              onIncludeChange: (items) => ref.read(userProvider.notifier).setDashboardEnabled(items),
+              onReorder: (reordered) => ref
+                  .read(userProvider.notifier)
+                  .setDashboardSorting(reordered),
+              onIncludeChange: (items) =>
+                  ref.read(userProvider.notifier).setDashboardEnabled(items),
             ),
             SettingsListTile(
               label: Text(context.localized.libraryFilters),
@@ -152,13 +166,9 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
             SettingsListTile(
               label: Text(context.localized.settingSecurityApplockTitle),
               subLabel: Text(user?.authMethod.name(context) ?? ""),
-              onTap: () => showAuthOptionsDialogue(
-                context,
-                user!,
-                (newUser) {
-                  ref.read(userProvider.notifier).updateUser(newUser);
-                },
-              ),
+              onTap: () => showAuthOptionsDialogue(context, user!, (newUser) {
+                ref.read(userProvider.notifier).updateUser(newUser);
+              }),
             ),
             SettingsListTileCheckbox(
               label: Text(context.localized.profileSettingsOpenAuthAtLaunch),
@@ -166,9 +176,9 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
               onChanged: user?.authMethod.shouldLock == true
                   ? (val) async {
                       if (user == null || val == null) return;
-                      ref.read(userProvider.notifier).updateUser(
-                            user.copyWith(askForAuthOnLaunch: val),
-                          );
+                      ref
+                          .read(userProvider.notifier)
+                          .updateUser(user.copyWith(askForAuthOnLaunch: val));
                     }
                   : null,
             ),
@@ -183,52 +193,75 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
           context,
           SettingsLabelDivider(label: context.localized.subtitles),
           [
-            Builder(builder: (context) {
-              final anyLanguageLabel = context.localized.anyLanguage;
-              final subtitleLanguagePreference =
-                  user?.userConfiguration?.subtitleLanguagePreference?.trim().toLowerCase();
-              final hasSubtitleLanguagePreference = subtitleLanguagePreference?.isNotEmpty == true;
+            Builder(
+              builder: (context) {
+                final anyLanguageLabel = context.localized.anyLanguage;
+                final subtitleLanguagePreference = user
+                    ?.userConfiguration
+                    ?.subtitleLanguagePreference
+                    ?.trim()
+                    .toLowerCase();
+                final hasSubtitleLanguagePreference =
+                    subtitleLanguagePreference?.isNotEmpty == true;
 
-              final currentCulture = cultures.firstWhereOrNull(
-                (e) => e.matchesLanguageCode(subtitleLanguagePreference),
-              );
+                final currentCulture = cultures.firstWhereOrNull(
+                  (e) => e.matchesLanguageCode(subtitleLanguagePreference),
+                );
 
-              return SettingsListTileEnum(
-                label: Text(context.localized.settingsProfileSubtitleLanguage),
-                current: !hasSubtitleLanguagePreference
-                    ? anyLanguageLabel
-                    : currentCulture?.displayName ?? context.localized.unknown,
-                itemBuilder: (context) => [
-                  ItemActionButton(
-                    selected: !hasSubtitleLanguagePreference,
-                    label: Text(anyLanguageLabel),
-                    action: () {
-                      ref.read(userProvider.notifier).updateSubtitleLanguagePreference(null);
-                    },
+                return SettingsListTileEnum(
+                  label: Text(
+                    context.localized.settingsProfileSubtitleLanguage,
                   ),
-                  ...cultures.map(
-                    (e) => ItemActionButton(
-                      selected: e.matchesLanguageCode(subtitleLanguagePreference),
-                      label: Text(e.displayName ?? e.name ?? context.localized.unknown),
+                  current: !hasSubtitleLanguagePreference
+                      ? anyLanguageLabel
+                      : currentCulture?.displayName ??
+                            context.localized.unknown,
+                  itemBuilder: (context) => [
+                    ItemActionButton(
+                      selected: !hasSubtitleLanguagePreference,
+                      label: Text(anyLanguageLabel),
                       action: () {
-                        ref.read(userProvider.notifier).updateSubtitleLanguagePreference(
-                            e.threeLetterISOLanguageName?.toLowerCase() ?? e.twoLetterISOLanguageName?.toLowerCase());
+                        ref
+                            .read(userProvider.notifier)
+                            .updateSubtitleLanguagePreference(null);
                       },
                     ),
-                  ),
-                ],
-              );
-            }),
+                    ...cultures.map(
+                      (e) => ItemActionButton(
+                        selected: e.matchesLanguageCode(
+                          subtitleLanguagePreference,
+                        ),
+                        label: Text(
+                          e.displayName ?? e.name ?? context.localized.unknown,
+                        ),
+                        action: () {
+                          ref
+                              .read(userProvider.notifier)
+                              .updateSubtitleLanguagePreference(
+                                e.threeLetterISOLanguageName?.toLowerCase() ??
+                                    e.twoLetterISOLanguageName?.toLowerCase(),
+                              );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
             SettingsListTileEnum(
               label: Text(context.localized.settingsProfileSubtitleMode),
-              current: user?.userConfiguration?.subtitleMode?.label(context) ?? context.localized.none,
+              current:
+                  user?.userConfiguration?.subtitleMode?.label(context) ??
+                  context.localized.none,
               itemBuilder: (context) => allowedSubModes
                   .map(
                     (mode) => ItemActionButton(
                       selected: user?.userConfiguration?.subtitleMode == mode,
                       label: Text(mode.label(context)),
                       action: () {
-                        ref.read(userProvider.notifier).updateSubtitleMode(mode);
+                        ref
+                            .read(userProvider.notifier)
+                            .updateSubtitleMode(mode);
                       },
                     ),
                   )
@@ -247,7 +280,10 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
                   SettingsListTileEnum(
                     label: Text(context.localized.updateCheckInterval),
                     subLabel: Text(context.localized.updateCheckIntervalDesc),
-                    current: timePickerString(context, clientSettings.updateNotificationsInterval),
+                    current: timePickerString(
+                      context,
+                      clientSettings.updateNotificationsInterval,
+                    ),
                     itemBuilder: (context) {
                       final durations = const [
                         Duration(minutes: 15),
@@ -261,8 +297,9 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
                       return durations.map((duration) {
                         return ItemActionButton(
                           label: Text(timePickerString(context, duration)),
-                          action: () =>
-                              ref.read(clientSettingsProvider.notifier).setUpdateNotificationsInterval(duration),
+                          action: () => ref
+                              .read(clientSettingsProvider.notifier)
+                              .setUpdateNotificationsInterval(duration),
                         );
                       }).toList();
                     },
@@ -273,9 +310,15 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: Text(
-                          context.localized.lastUpdateAt(lastUpdateAt, lastUpdateAt),
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withAlpha(155),
+                          context.localized.lastUpdateAt(
+                            lastUpdateAt,
+                            lastUpdateAt,
+                          ),
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color?.withAlpha(155),
                               ),
                         ),
                       ),
@@ -308,13 +351,19 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
                   final current = ref.read(userProvider);
                   if (current == null || val == null) return;
 
-                  ref.read(userProvider.notifier).userState = current.copyWith(updateNotificationsEnabled: val);
+                  ref.read(userProvider.notifier).userState = current.copyWith(
+                    updateNotificationsEnabled: val,
+                  );
 
                   if (val) {
                     await NotificationService.requestPermission();
-                    await ref.read(updateNotificationsProvider).registerBackgroundTask();
+                    await ref
+                        .read(updateNotificationsProvider)
+                        .registerBackgroundTask();
                   } else {
-                    await ref.read(updateNotificationsProvider).conditionallyUnregisterBackgroundTask();
+                    await ref
+                        .read(updateNotificationsProvider)
+                        .conditionallyUnregisterBackgroundTask();
                   }
                 },
               ),
@@ -326,21 +375,26 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
                     ? (val) async {
                         final current = ref.read(userProvider);
                         if (current == null || val == null) return;
-                        ref.read(userProvider.notifier).userState = current.copyWith(
-                          includeHiddenViews: val,
-                        );
-                        await ref.read(updateNotificationsProvider).registerBackgroundTask();
+                        ref.read(userProvider.notifier).userState = current
+                            .copyWith(includeHiddenViews: val);
+                        await ref
+                            .read(updateNotificationsProvider)
+                            .registerBackgroundTask();
                       }
                     : null,
               ),
               if (kDebugMode) ...[
                 SettingsListTile(
                   label: const Text('Show notification (debug)'),
-                  onTap: () async => await ref.read(updateNotificationsProvider).executeBackgroundTask(),
+                  onTap: () async => await ref
+                      .read(updateNotificationsProvider)
+                      .executeBackgroundTask(),
                 ),
                 SettingsListTile(
                   label: const Text('Cancel all tasks (debug)'),
-                  onTap: () async => await ref.read(updateNotificationsProvider).cancelAllTasks(),
+                  onTap: () async => await ref
+                      .read(updateNotificationsProvider)
+                      .cancelAllTasks(),
                 ),
               ],
             ],
@@ -353,7 +407,9 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
           [
             SettingsListTile(
               label: Text(context.localized.seerr),
-              subLabel: Text(_seerrStatusLabel(context, user?.seerrCredentials, seerrUser)),
+              subLabel: Text(
+                _seerrStatusLabel(context, user?.seerrCredentials, seerrUser),
+              ),
               onTap: () => showSeerrConnectionDialog(context),
             ),
             if (seerrUser?.canManageRequests ?? false)
@@ -364,13 +420,19 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
                   final current = ref.read(userProvider);
                   if (current == null || val == null) return;
 
-                  ref.read(userProvider.notifier).userState = current.copyWith(seerrRequestsEnabled: val);
+                  ref.read(userProvider.notifier).userState = current.copyWith(
+                    seerrRequestsEnabled: val,
+                  );
 
                   if (val) {
                     await NotificationService.requestPermission();
-                    await ref.read(updateNotificationsProvider).registerBackgroundTask();
+                    await ref
+                        .read(updateNotificationsProvider)
+                        .registerBackgroundTask();
                   } else {
-                    await ref.read(updateNotificationsProvider).conditionallyUnregisterBackgroundTask();
+                    await ref
+                        .read(updateNotificationsProvider)
+                        .conditionallyUnregisterBackgroundTask();
                   }
                 },
               ),
@@ -385,7 +447,11 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
           [
             SettingsListTile(
               label: Text(context.localized.server),
-              subLabel: Text(user?.credentials.url.isNotEmpty == true ? user!.credentials.url : context.localized.none),
+              subLabel: Text(
+                user?.credentials.url.isNotEmpty == true
+                    ? user!.credentials.url
+                    : context.localized.none,
+              ),
               onTap: () {
                 openSimpleTextInput(
                   context,
@@ -393,9 +459,13 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
                   (value) async {
                     final messenger = ScaffoldMessenger.of(context);
                     final failedMessage = context.localized.unableToConnectHost;
-                    final success = await ref.read(userProvider.notifier).setServerURL(value);
+                    final success = await ref
+                        .read(userProvider.notifier)
+                        .setServerURL(value);
                     if (!success) {
-                      messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(failedMessage)),
+                      );
                     }
                   },
                   context.localized.server,
@@ -422,7 +492,9 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
                   Text(context.localized.settingsLocalUrlTitle),
                 ],
               ),
-              subLabel: Text(user?.credentials.localUrl ?? context.localized.none),
+              subLabel: Text(
+                user?.credentials.localUrl ?? context.localized.none,
+              ),
               onTap: () {
                 openSimpleTextInput(
                   context,
@@ -437,13 +509,12 @@ class _UserSettingsPageState extends ConsumerState<ProfileSettingsPage> with Wid
               label: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 spacing: 8,
-                children: [
-                  Text(context.localized.incognitoModeLocal),
-                ],
+                children: [Text(context.localized.incognitoModeLocal)],
               ),
               value: user?.incognitoMode ?? false,
               subLabel: Text(context.localized.incognitoModeDesc),
-              onChanged: (value) => ref.read(userProvider.notifier).toggleIncognitoMode(),
+              onChanged: (value) =>
+                  ref.read(userProvider.notifier).toggleIncognitoMode(),
             ),
           ],
         ),

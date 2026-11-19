@@ -19,20 +19,30 @@ abstract class HomeSettingsModel with _$HomeSettingsModel {
     @Default({...LayoutMode.values}) Set<LayoutMode> screenLayouts,
     @Default({...ViewSize.values}) Set<ViewSize> layoutStates,
     @Default(HomeBanner.carousel) HomeBanner homeBanner,
-    @Default(HomeCarouselSettings.combined) HomeCarouselSettings carouselSettings,
-    @JsonKey(unknownEnumValue: HomeNextUp.separate) @Default(HomeNextUp.separate) HomeNextUp nextUp,
+    @Default(HomeCarouselSettings.combined)
+    HomeCarouselSettings carouselSettings,
+    @JsonKey(unknownEnumValue: HomeNextUp.separate)
+    @Default(HomeNextUp.separate)
+    HomeNextUp nextUp,
   }) = _HomeSettingsModel;
 
   static HomeSettingsModel defaultModel() {
     return HomeSettingsModel(
-      homeBanner: leanBackMode ? HomeBanner.tvSliderBanner : HomeBanner.carousel,
+      homeBanner: leanBackMode
+          ? HomeBanner.tvSliderBanner
+          : HomeBanner.carousel,
     );
   }
 
-  factory HomeSettingsModel.fromJson(Map<String, dynamic> json) => _$HomeSettingsModelFromJson(json);
+  factory HomeSettingsModel.fromJson(Map<String, dynamic> json) =>
+      _$HomeSettingsModelFromJson(json);
 }
 
-T selectAvailableOrSmaller<T>(T value, Set<T> availableOptions, List<T> allOptions) {
+T selectAvailableOrSmaller<T>(
+  T value,
+  Set<T> availableOptions,
+  List<T> allOptions,
+) {
   if (availableOptions.contains(value)) {
     return value;
   }
@@ -58,44 +68,42 @@ enum HomeBanner {
   const HomeBanner();
 
   String label(BuildContext context) => switch (this) {
-        HomeBanner.hide => context.localized.hide,
-        HomeBanner.carousel => context.localized.homeBannerCarousel,
-        HomeBanner.banner => context.localized.homeBannerSlideshow,
-        HomeBanner.detailedBanner => context.localized.homeBannerDetailed,
-        HomeBanner.tvSliderBanner => context.localized.homeBannerTV,
-      };
+    HomeBanner.hide => context.localized.hide,
+    HomeBanner.carousel => context.localized.homeBannerCarousel,
+    HomeBanner.banner => context.localized.homeBannerSlideshow,
+    HomeBanner.detailedBanner => context.localized.homeBannerDetailed,
+    HomeBanner.tvSliderBanner => context.localized.homeBannerTV,
+  };
 }
 
 enum HomeCarouselSettings {
   nextUp,
   cont,
-  combined,
-  ;
+  combined;
 
   const HomeCarouselSettings();
 
   String label(BuildContext context) => switch (this) {
-        HomeCarouselSettings.nextUp => context.localized.nextUp,
-        HomeCarouselSettings.cont => context.localized.settingsContinue,
-        HomeCarouselSettings.combined => context.localized.combined,
-      };
+    HomeCarouselSettings.nextUp => context.localized.nextUp,
+    HomeCarouselSettings.cont => context.localized.settingsContinue,
+    HomeCarouselSettings.combined => context.localized.combined,
+  };
 }
 
 enum HomeNextUp {
   nextUp,
   cont,
   combined,
-  separate,
-  ;
+  separate;
 
   const HomeNextUp();
 
   String label(BuildContext context) => switch (this) {
-        HomeNextUp.nextUp => context.localized.nextUp,
-        HomeNextUp.cont => context.localized.settingsContinue,
-        HomeNextUp.combined => context.localized.combined,
-        HomeNextUp.separate => context.localized.separate,
-      };
+    HomeNextUp.nextUp => context.localized.nextUp,
+    HomeNextUp.cont => context.localized.settingsContinue,
+    HomeNextUp.combined => context.localized.combined,
+    HomeNextUp.separate => context.localized.separate,
+  };
 }
 
 enum DashboardSorting {
@@ -107,13 +115,14 @@ enum DashboardSorting {
   const DashboardSorting();
 
   static Map<DashboardSorting, bool> get defaultSorting => {
-        for (final sorting in DashboardSorting.values) sorting: true,
-      };
+    for (final sorting in DashboardSorting.values)
+      sorting: sorting != DashboardSorting.liveTV,
+  };
 
   String label(BuildContext context) => switch (this) {
-        DashboardSorting.liveTV => context.localized.liveTV,
-        DashboardSorting.nextUp => context.localized.nextUp,
-        DashboardSorting.recentlyAdded => context.localized.recentlyAdded,
-        DashboardSorting.filters => context.localized.filter(2),
-      };
+    DashboardSorting.liveTV => context.localized.liveTV,
+    DashboardSorting.nextUp => context.localized.nextUp,
+    DashboardSorting.recentlyAdded => context.localized.recentlyAdded,
+    DashboardSorting.filters => context.localized.filter(2),
+  };
 }

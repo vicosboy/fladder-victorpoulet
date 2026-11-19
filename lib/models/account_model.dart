@@ -45,14 +45,18 @@ abstract class AccountModel with _$AccountModel {
 
     //Server values not stored in the database
     @JsonKey(includeFromJson: false, includeToJson: false) UserPolicy? policy,
-    @JsonKey(includeFromJson: false, includeToJson: false) ServerConfiguration? serverConfiguration,
-    @JsonKey(includeFromJson: false, includeToJson: false) UserConfiguration? userConfiguration,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    ServerConfiguration? serverConfiguration,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    UserConfiguration? userConfiguration,
     @JsonKey(includeFromJson: false, includeToJson: false) bool? hasPassword,
-    @JsonKey(includeFromJson: false, includeToJson: false) bool? hasConfiguredPassword,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    bool? hasConfiguredPassword,
     UserSettings? userSettings,
   }) = _AccountModel;
 
-  factory AccountModel.fromJson(Map<String, dynamic> json) => _$AccountModelFromJson(json);
+  factory AccountModel.fromJson(Map<String, dynamic> json) =>
+      _$AccountModelFromJson(json);
 
   bool get canDownload => (policy?.enableContentDownloading ?? false);
 
@@ -84,7 +88,8 @@ class CredentialsConverter implements JsonConverter<CredentialsModel, Object?> {
   }
 }
 
-class LibraryFiltersConverter implements JsonConverter<List<LibraryFiltersModel>, Object?> {
+class LibraryFiltersConverter
+    implements JsonConverter<List<LibraryFiltersModel>, Object?> {
   const LibraryFiltersConverter();
 
   @override
@@ -92,14 +97,19 @@ class LibraryFiltersConverter implements JsonConverter<List<LibraryFiltersModel>
     final decoded = json is String ? jsonDecode(json) : json;
     if (decoded is! List) return [];
 
-    return decoded.whereType<Map<String, dynamic>>().map(LibraryFiltersModel.fromJson).toList();
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map(LibraryFiltersModel.fromJson)
+        .toList();
   }
 
   @override
-  Object toJson(List<LibraryFiltersModel> filters) => filters.map((filter) => filter.toJson()).toList();
+  Object toJson(List<LibraryFiltersModel> filters) =>
+      filters.map((filter) => filter.toJson()).toList();
 }
 
-class FilterSortOrderConverter implements JsonConverter<Map<FilterSortKey, List<String>>, Object?> {
+class FilterSortOrderConverter
+    implements JsonConverter<Map<FilterSortKey, List<String>>, Object?> {
   const FilterSortOrderConverter();
 
   @override
@@ -125,11 +135,7 @@ class FilterSortOrderConverter implements JsonConverter<Map<FilterSortKey, List<
 
   @override
   Object toJson(Map<FilterSortKey, List<String>> value) {
-    return jsonEncode(
-      value.map(
-        (key, value) => MapEntry(key.name, value),
-      ),
-    );
+    return jsonEncode(value.map((key, value) => MapEntry(key.name, value)));
   }
 }
 
@@ -142,7 +148,8 @@ extension EnumByNameOrNull<T extends Enum> on Iterable<T> {
   }
 }
 
-class DashboardSortingConverter implements JsonConverter<Map<DashboardSorting, bool>, Object?> {
+class DashboardSortingConverter
+    implements JsonConverter<Map<DashboardSorting, bool>, Object?> {
   const DashboardSortingConverter();
 
   @override
@@ -154,7 +161,9 @@ class DashboardSortingConverter implements JsonConverter<Map<DashboardSorting, b
     final result = <DashboardSorting, bool>{};
 
     for (final entry in decoded.entries) {
-      final enumValue = DashboardSorting.values.byNameOrNull(entry.key.toString());
+      final enumValue = DashboardSorting.values.byNameOrNull(
+        entry.key.toString(),
+      );
       if (enumValue != null) {
         result[enumValue] = entry.value == true;
       }
@@ -165,11 +174,7 @@ class DashboardSortingConverter implements JsonConverter<Map<DashboardSorting, b
 
   @override
   Object toJson(Map<DashboardSorting, bool> value) {
-    return jsonEncode(
-      value.map(
-        (key, value) => MapEntry(key.name, value),
-      ),
-    );
+    return jsonEncode(value.map((key, value) => MapEntry(key.name, value)));
   }
 }
 
@@ -189,23 +194,34 @@ abstract class UserSettings with _$UserSettings {
   factory UserSettings({
     @Default(Duration(seconds: 30)) Duration skipForwardDuration,
     @Default(Duration(seconds: 10)) Duration skipBackDuration,
-    @LibraryFiltersConverter() @Default([]) List<LibraryFiltersModel> libraryFilters,
-    @FilterSortOrderConverter() @Default({}) Map<FilterSortKey, List<String>> filterSortOrder,
-    @DashboardSortingConverter() @Default({}) Map<DashboardSorting, bool> pDashboardSorting,
+    @LibraryFiltersConverter()
+    @Default([])
+    List<LibraryFiltersModel> libraryFilters,
+    @FilterSortOrderConverter()
+    @Default({})
+    Map<FilterSortKey, List<String>> filterSortOrder,
+    @DashboardSortingConverter()
+    @Default({})
+    Map<DashboardSorting, bool> pDashboardSorting,
   }) = _UserSettings;
 
   Map<DashboardSorting, bool> get dashboardSorting {
     return {
       ...pDashboardSorting,
       for (final sorting in DashboardSorting.values)
-        if (!pDashboardSorting.containsKey(sorting)) sorting: true,
+        if (!pDashboardSorting.containsKey(sorting))
+          sorting: sorting != DashboardSorting.liveTV,
+      DashboardSorting.liveTV: false,
     };
   }
 
-  factory UserSettings.fromJson(Map<String, dynamic> json) => _$UserSettingsFromJson(json);
+  factory UserSettings.fromJson(Map<String, dynamic> json) =>
+      _$UserSettingsFromJson(json);
 
   List<LibraryFiltersModel> getFilterSortOrder(FilterSortKey key) {
-    final keyFilters = libraryFilters.where((filter) => filter.sortKeys[key] ?? false).toList();
+    final keyFilters = libraryFilters
+        .where((filter) => filter.sortKeys[key] ?? false)
+        .toList();
 
     final order = filterSortOrder[key] ?? [];
     if (order.isEmpty) return keyFilters;
@@ -232,21 +248,24 @@ enum Authentication {
   const Authentication(this.value);
   final int value;
 
-  static Set<Authentication> get secureOptions => Authentication.values.where((element) => element.shouldLock).toSet();
+  static Set<Authentication> get secureOptions =>
+      Authentication.values.where((element) => element.shouldLock).toSet();
 
   bool get shouldLock => switch (this) {
-        Authentication.autoLogin => false,
-        Authentication.biometrics => true,
-        Authentication.passcode => true,
-        Authentication.pattern => true,
-        Authentication.none => false,
-      };
+    Authentication.autoLogin => false,
+    Authentication.biometrics => true,
+    Authentication.passcode => true,
+    Authentication.pattern => true,
+    Authentication.none => false,
+  };
 
   static Future<Set<Authentication>> available() async {
     final localAuthentication = LocalAuthentication();
     final canCheckBiometrics = await localAuthentication.canCheckBiometrics;
-    final getAvailableBiometrics = await localAuthentication.getAvailableBiometrics();
-    final bool hasBiometrics = canCheckBiometrics || getAvailableBiometrics.isNotEmpty;
+    final getAvailableBiometrics = await localAuthentication
+        .getAvailableBiometrics();
+    final bool hasBiometrics =
+        canCheckBiometrics || getAvailableBiometrics.isNotEmpty;
     return {
       Authentication.autoLogin,
       if (hasBiometrics) Authentication.biometrics,
