@@ -6,5 +6,6 @@
 _flutter.loader.load({
   config: {
     entrypointBaseUrl: "https://vicosboy.github.io/fladder-victorpoulet/",
+    assetBase: "https://vicosboy.github.io/fladder-victorpoulet/",
   },
 });
