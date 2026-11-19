@@ -8,15 +8,20 @@ import 'package:fladder/providers/video_player_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Manages the context-aware window title.
-final windowTitleProvider = StateNotifierProvider<WindowTitleNotifier, String>((ref) {
+final windowTitleProvider = StateNotifierProvider<WindowTitleNotifier, String>((
+  ref,
+) {
   return WindowTitleNotifier(ref);
 });
 
 class WindowTitleNotifier extends StateNotifier<String> {
   final Ref ref;
-  WindowTitleNotifier(this.ref) : super('Fladder') {
+  WindowTitleNotifier(this.ref) : super('Cinéma') {
     // Listen to player state changes to handle minimized <-> maximized transitions
-    ref.listen(mediaPlaybackProvider.select((v) => v.state), (_, _) => _update());
+    ref.listen(
+      mediaPlaybackProvider.select((v) => v.state),
+      (_, _) => _update(),
+    );
     ref.listen(musicDashboardModeProvider, (_, _) => _update());
   }
 
@@ -57,16 +62,20 @@ class WindowTitleNotifier extends StateNotifier<String> {
   void _update() {
     final nav = _stackKeys.isNotEmpty ? _titles[_stackKeys.last] : null;
     final playerState = ref.read(mediaPlaybackProvider).state;
-    final appName = ref.read(musicDashboardModeProvider) ? 'Tjilp' : 'Fladder';
+    final appName = ref.read(musicDashboardModeProvider) ? 'Musique' : 'Cinéma';
 
     final isPlayerActive = playerState != VideoPlayerState.disposed;
     final isPlayerMinimized = playerState == VideoPlayerState.minimized;
 
     // Use playTitle if player is active and expanded/fullscreen.
     // If player is minimized or inactive, prefer navigation title.
-    final title = (isPlayerActive && !isPlayerMinimized) ? (_playTitle ?? nav) : (nav ?? _playTitle);
+    final title = (isPlayerActive && !isPlayerMinimized)
+        ? (_playTitle ?? nav)
+        : (nav ?? _playTitle);
 
-    final newState = title != null && title.isNotEmpty ? '$appName - $title' : appName;
+    final newState = title != null && title.isNotEmpty
+        ? '$appName - $title'
+        : appName;
 
     if (state == newState) return;
 
@@ -74,7 +83,8 @@ class WindowTitleNotifier extends StateNotifier<String> {
       state = newState;
     });
 
-    if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
+    if (!kIsWeb &&
+        (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
       windowManager.setTitle(newState);
     }
   }

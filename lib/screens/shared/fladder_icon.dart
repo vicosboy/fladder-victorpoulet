@@ -1,39 +1,15 @@
-import 'dart:ui' as ui;
-
 import 'package:material_ui/material_ui.dart';
-
-import 'package:flutter_svg/flutter_svg.dart';
-
-import 'package:fladder/util/theme_extensions.dart';
 
 class FladderIcon extends StatelessWidget {
   final double size;
-  const FladderIcon({this.size = 100, super.key});
+  const FladderIcon({this.size = 72, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ShaderMask(
-          shaderCallback: (Rect bounds) {
-            return ui.Gradient.linear(
-              const Offset(30, 30),
-              const Offset(80, 80),
-              [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.secondary,
-              ],
-            );
-          },
-          child: SvgPicture.asset(
-            "icons/fladder_icon.svg",
-            width: size,
-            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-          ),
-        ),
-      ],
+    return Icon(
+      Icons.local_movies_outlined,
+      size: size,
+      color: Theme.of(context).colorScheme.primary,
     );
   }
 }
@@ -45,10 +21,10 @@ class FladderIconOutlined extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SvgPicture.asset(
-      "icons/fladder_icon_outline.svg",
-      width: size,
-      colorFilter: ColorFilter.mode(color ?? context.colors.onSurfaceVariant, BlendMode.srcATop),
+    return Icon(
+      Icons.local_movies_outlined,
+      size: size,
+      color: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
     );
   }
 }
