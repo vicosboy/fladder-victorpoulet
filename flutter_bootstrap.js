@@ -45,7 +45,7 @@ _flutter.buildConfig = {"engineRevision":"371f77202a73e8dff57a8b3bff75bca55c090a
 // of reusing an older, long-lived compiled bundle.
 for (const build of _flutter.buildConfig.builds) {
   if (build.mainJsPath) {
-    build.mainJsPath = `${build.mainJsPath}?release=connectivity-playback-20261127`;
+    build.mainJsPath = `${build.mainJsPath}?release=web-playback-subs-20261127`;
   }
 }
 
