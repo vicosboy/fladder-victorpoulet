@@ -446,7 +446,7 @@ class PlaybackModelHelper {
         newStreamModel?.defaultAudioStreamIndex,
       );
 
-      final subStreamIndex = selectSubStream(
+      final selectedSubStreamIndex = selectSubStream(
         ref.read(
           userProvider.select(
             (value) =>
@@ -456,6 +456,10 @@ class PlaybackModelHelper {
         oldModel?.mediaStreams?.currentSubStream,
         newStreamModel?.subStreams,
         newStreamModel?.defaultSubStreamIndex,
+      );
+      final subStreamIndex = selectWebCompatibleSubStream(
+        selectedSubStreamIndex,
+        newStreamModel?.subStreams,
       );
 
       //Native player does not allow for loading external subtitles with transcoding
@@ -667,7 +671,7 @@ class PlaybackModelHelper {
       playbackModel.audioStreams,
       playbackModel.mediaStreams?.defaultAudioStreamIndex,
     );
-    final subIndex = selectSubStream(
+    final selectedSubIndex = selectSubStream(
       ref.read(
         userProvider.select(
           (value) =>
@@ -677,6 +681,10 @@ class PlaybackModelHelper {
       playbackModel.mediaStreams?.currentSubStream,
       playbackModel.subStreams,
       playbackModel.mediaStreams?.defaultSubStreamIndex,
+    );
+    final subIndex = selectWebCompatibleSubStream(
+      selectedSubIndex,
+      playbackModel.subStreams,
     );
 
     Response<PlaybackInfoResponse> response = await api

@@ -6,15 +6,15 @@ const DeviceProfile webProfile = DeviceProfile(
   musicStreamingTranscodingBitrate: 384000,
   directPlayProfiles: [
     DirectPlayProfile(
-      container: 'mkv,webm',
+      container: 'webm',
       type: DlnaProfileType.video,
-      videoCodec: 'h264,hevc,vp8,vp9,av1',
-      audioCodec: 'vorbis,opus,aac',
+      videoCodec: 'vp8,vp9,av1',
+      audioCodec: 'vorbis,opus',
     ),
     DirectPlayProfile(
       container: 'mp4,m4v',
       type: DlnaProfileType.video,
-      videoCodec: 'h264,hevc,vp8,vp9,av1',
+      videoCodec: 'h264',
       audioCodec: 'aac,mp3,mp2,opus,flac,vorbis',
     ),
     DirectPlayProfile(
@@ -24,14 +24,30 @@ const DeviceProfile webProfile = DeviceProfile(
       audioCodec: 'aac,mp3,mp2,opus,flac,vorbis',
     ),
     DirectPlayProfile(container: 'opus', type: DlnaProfileType.audio),
-    DirectPlayProfile(container: 'webm', audioCodec: 'opus', type: DlnaProfileType.audio),
+    DirectPlayProfile(
+      container: 'webm',
+      audioCodec: 'opus',
+      type: DlnaProfileType.audio,
+    ),
     DirectPlayProfile(container: 'mp3', type: DlnaProfileType.audio),
     DirectPlayProfile(container: 'aac', type: DlnaProfileType.audio),
-    DirectPlayProfile(container: 'm4a', audioCodec: 'aac', type: DlnaProfileType.audio),
-    DirectPlayProfile(container: 'm4b', audioCodec: 'aac', type: DlnaProfileType.audio),
+    DirectPlayProfile(
+      container: 'm4a',
+      audioCodec: 'aac',
+      type: DlnaProfileType.audio,
+    ),
+    DirectPlayProfile(
+      container: 'm4b',
+      audioCodec: 'aac',
+      type: DlnaProfileType.audio,
+    ),
     DirectPlayProfile(container: 'flac', type: DlnaProfileType.audio),
     DirectPlayProfile(container: 'webma', type: DlnaProfileType.audio),
-    DirectPlayProfile(container: 'webm', audioCodec: 'webma', type: DlnaProfileType.audio),
+    DirectPlayProfile(
+      container: 'webm',
+      audioCodec: 'webma',
+      type: DlnaProfileType.audio,
+    ),
     DirectPlayProfile(container: 'wav', type: DlnaProfileType.audio),
     DirectPlayProfile(container: 'ogg', type: DlnaProfileType.audio),
     DirectPlayProfile(
@@ -263,7 +279,7 @@ const DeviceProfile webProfile = DeviceProfile(
     ),
   ],
   subtitleProfiles: [
-    SubtitleProfile(format: 'vtt', method: SubtitleDeliveryMethod.embed),
-    SubtitleProfile(format: 'srt', method: SubtitleDeliveryMethod.embed),
+    SubtitleProfile(format: 'vtt', method: SubtitleDeliveryMethod.$external),
+    SubtitleProfile(format: 'srt', method: SubtitleDeliveryMethod.$external),
   ],
 );

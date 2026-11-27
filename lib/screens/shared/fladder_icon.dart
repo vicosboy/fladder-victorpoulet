@@ -7,7 +7,7 @@ class FladderIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Icon(
-      Icons.local_movies_outlined,
+      Icons.dns_outlined,
       size: size,
       color: Theme.of(context).colorScheme.primary,
     );
@@ -22,7 +22,7 @@ class FladderIconOutlined extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Icon(
-      Icons.local_movies_outlined,
+      Icons.dns_outlined,
       size: size,
       color: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
     );

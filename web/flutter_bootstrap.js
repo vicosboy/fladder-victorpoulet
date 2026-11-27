@@ -5,7 +5,7 @@
 // of reusing an older, long-lived compiled bundle.
 for (const build of _flutter.buildConfig.builds) {
   if (build.mainJsPath) {
-    build.mainJsPath = `${build.mainJsPath}?release=connectivity-playback-20261127`;
+    build.mainJsPath = `${build.mainJsPath}?release=web-playback-subs-20261127`;
   }
 }
 
