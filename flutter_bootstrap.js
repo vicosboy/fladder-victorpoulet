@@ -40,14 +40,14 @@ if (!window._flutter) {
 }
 _flutter.buildConfig = {"engineRevision":"371f77202a73e8dff57a8b3bff75bca55c090aee","wasmHashes":{"wimp.wasm":"f2850c8522fd07ea4406f698f85488aa6b0541cbf9a25e853a241e78ab8c8d1e","webparagraph/canvaskit.wasm":"01f0337c620a2afe20b92578ab5ec8db8e5bb6eccdef751d30bac9d1d683988e","skwasm.wasm":"8cc8a3a92f5b3b82d3981b068f883cb76fc97b2fe50c0eb12b43515200460841","chromium/canvaskit.wasm":"e269e717aad848981ed07db8573b4f7923ccd557d2e696f2944f541f4ff3df9f","canvaskit.wasm":"f3c2ff164f324217ebe1d84900110e425c0195fc63f34e8b58de842a047e0c1c","skwasm_heavy.wasm":"0827476759917a5c67cb54fdb7c625bba341fccfe7508258dfdce78f18ea905e"},"builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
 
+
 // Force browsers to fetch the current interface after a deployment instead
 // of reusing an older, long-lived compiled bundle.
 for (const build of _flutter.buildConfig.builds) {
   if (build.mainJsPath) {
-    build.mainJsPath = `${build.mainJsPath}?release=mobile-scroll-20261119`;
+    build.mainJsPath = `${build.mainJsPath}?release=connectivity-playback-20261127`;
   }
 }
-
 
 // Keep the Jellyfin page and API on the user's server, while loading the
 // sizeable compiled application from a fast static host.
