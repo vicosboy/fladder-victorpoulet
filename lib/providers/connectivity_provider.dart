@@ -23,17 +23,22 @@ enum ConnectionState {
   vpn;
 
   bool get homeInternet => switch (this) {
-        ConnectionState.offline => false,
-        ConnectionState.mobile => false,
-        ConnectionState.wifi => true,
-        ConnectionState.ethernet => true,
-        ConnectionState.vpn => true,
-      };
+    ConnectionState.offline => false,
+    ConnectionState.mobile => false,
+    ConnectionState.wifi => true,
+    ConnectionState.ethernet => true,
+    ConnectionState.vpn => true,
+  };
 }
 
 final offlineStateProvider = Provider<bool>((ref) {
   final isLoggedIn = ref.watch(userProvider.select((value) => value != null));
-  return ref.watch(connectivityStatusProvider.select((value) => value == ConnectionState.offline)) && isLoggedIn;
+  return ref.watch(
+        connectivityStatusProvider.select(
+          (value) => value == ConnectionState.offline,
+        ),
+      ) &&
+      isLoggedIn;
 });
 
 final localConnectionAvailableProvider = StateProvider<bool>((ref) => false);
@@ -44,17 +49,18 @@ class ConnectivityStatus extends _$ConnectivityStatus {
   int _probeId = 0;
   Completer<void>? _probeCompleter;
   DateTime? _lastProbe;
+  int _consecutiveProbeFailures = 0;
 
   @override
   ConnectionState build() {
-    ref.listen(
-      userProvider.select((value) => value?.credentials.localUrl),
-      (previous, next) {
-        if (previous != next) {
-          checkConnectivity(immediate: true);
-        }
-      },
-    );
+    ref.listen(userProvider.select((value) => value?.credentials.localUrl), (
+      previous,
+      next,
+    ) {
+      if (previous != next) {
+        checkConnectivity(immediate: true);
+      }
+    });
 
     final subscription = Connectivity().onConnectivityChanged.listen((results) {
       _handleHardwareChange(results);
@@ -73,26 +79,36 @@ class ConnectivityStatus extends _$ConnectivityStatus {
   }
 
   Future<void> checkConnectivity({bool immediate = false}) async {
-    final results = await Connectivity().checkConnectivity().catchError((_) => [ConnectivityResult.ethernet]);
+    final results = await Connectivity().checkConnectivity().catchError(
+      (_) => [ConnectivityResult.ethernet],
+    );
     _handleHardwareChange(results, immediate: immediate);
   }
 
   Future<void> checkConnectivityThrottled() async {
     final lastProbe = _lastProbe;
-    if (lastProbe != null && DateTime.now().difference(lastProbe) < const Duration(seconds: 30)) return;
+    if (lastProbe != null &&
+        DateTime.now().difference(lastProbe) < const Duration(seconds: 30))
+      return;
     return checkConnectivity(immediate: true);
   }
 
   Future<void> waitForProbe() async => _probeCompleter?.future;
 
-  void _handleHardwareChange(List<ConnectivityResult> results, {bool immediate = false}) {
+  void _handleHardwareChange(
+    List<ConnectivityResult> results, {
+    bool immediate = false,
+  }) {
     final hardwareState = _parseHardwareState(results);
 
     if (hardwareState == ConnectionState.offline) {
-      _debounceTimer?.cancel();
-      _probeId++;
-      _resolveProbe();
-      _updateState(ConnectionState.offline, isLocal: false);
+      // Browser connectivity events can briefly report no network while the
+      // active interface changes. Confirm against Jellyfin before hiding all
+      // online content.
+      final lastOnlineState = state == ConnectionState.offline
+          ? ConnectionState.mobile
+          : state;
+      _queueProbe(lastOnlineState);
       return;
     }
 
@@ -114,7 +130,10 @@ class ConnectivityStatus extends _$ConnectivityStatus {
     }
   }
 
-  Future<void> _probeReachability(int id, ConnectionState candidateState) async {
+  Future<void> _probeReachability(
+    int id,
+    ConnectionState candidateState,
+  ) async {
     _lastProbe = DateTime.now();
     try {
       final user = ref.read(userProvider);
@@ -124,11 +143,14 @@ class ConnectivityStatus extends _$ConnectivityStatus {
       if (localUrl != null && localUrl.isNotEmpty) {
         final permission = await checkLocalNetworkPermission();
         if (permission == LocalNetworkPermissionStatus.granted) {
-          final localConnection = await fetchSystemInfoDynamic(normalizeUrl(localUrl));
+          final localConnection = await fetchSystemInfoDynamic(
+            normalizeUrl(localUrl),
+          );
 
           if (_probeId != id) return;
 
           if (localConnection?.id == user.credentials.serverId) {
+            _consecutiveProbeFailures = 0;
             _updateState(candidateState, isLocal: true);
             return;
           }
@@ -139,18 +161,29 @@ class ConnectivityStatus extends _$ConnectivityStatus {
 
       final remoteUrl = user.credentials.url;
       if (remoteUrl.isNotEmpty) {
-        final checkServer = await fetchSystemInfoDynamic(normalizeUrl(remoteUrl));
+        final checkServer = await fetchSystemInfoDynamic(
+          normalizeUrl(remoteUrl),
+        );
 
         if (_probeId != id) return;
 
         if (checkServer != null) {
+          _consecutiveProbeFailures = 0;
           _updateState(candidateState, isLocal: false);
           return;
         }
       }
 
       if (_probeId == id) {
-        _updateState(ConnectionState.offline, isLocal: false);
+        _consecutiveProbeFailures++;
+        if (_consecutiveProbeFailures < 2) {
+          _debounceTimer = Timer(
+            const Duration(milliseconds: 1500),
+            () => _queueProbe(candidateState, immediate: true),
+          );
+        } else {
+          _updateState(ConnectionState.offline, isLocal: false);
+        }
       }
     } finally {
       if (_probeId == id) {
@@ -173,9 +206,11 @@ class ConnectivityStatus extends _$ConnectivityStatus {
 
   ConnectionState _parseHardwareState(List<ConnectivityResult> results) {
     if (results.contains(ConnectivityResult.vpn)) return ConnectionState.vpn;
-    if (results.contains(ConnectivityResult.ethernet)) return ConnectionState.ethernet;
+    if (results.contains(ConnectivityResult.ethernet))
+      return ConnectionState.ethernet;
     if (results.contains(ConnectivityResult.wifi)) return ConnectionState.wifi;
-    if (results.contains(ConnectivityResult.mobile)) return ConnectionState.mobile;
+    if (results.contains(ConnectivityResult.mobile))
+      return ConnectionState.mobile;
     return ConnectionState.offline;
   }
 }
@@ -183,10 +218,13 @@ class ConnectivityStatus extends _$ConnectivityStatus {
 Future<PublicSystemInfo?> fetchSystemInfoDynamic(String baseUrl) async {
   if (baseUrl.isEmpty) return null;
   try {
-    final uri = buildServerUriFromBase(baseUrl, pathSegments: const ['System', 'Info', 'Public']);
+    final uri = buildServerUriFromBase(
+      baseUrl,
+      pathSegments: const ['System', 'Info', 'Public'],
+    );
     if (uri == null) return null;
 
-    final response = await http.get(uri).timeout(const Duration(seconds: 2));
+    final response = await http.get(uri).timeout(const Duration(seconds: 6));
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return PublicSystemInfo.fromJson(jsonDecode(response.body));
